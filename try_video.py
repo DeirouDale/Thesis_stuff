@@ -7,8 +7,9 @@ import time
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
-# Initialize webcam capture (camera index 0)
-cap = cv2.VideoCapture(0)
+# Load your video file (replace 'your_video.mp4' with the path to your video file)
+video_path = 'Video.mp4'
+cap = cv2.VideoCapture(video_path)
 
 # Set the initial window size
 cv2.namedWindow("Leg Tracking with Bounding Box", cv2.WINDOW_NORMAL)
@@ -83,8 +84,8 @@ while cap.isOpened():
             # Capture the content within the bounding box
             bounding_box_content = frame[y_min:y_max, x_min:x_max]
 
-            # Check if bounding_box_content is not empty and has valid dimensions
-            if bounding_box_content is not None and bounding_box_content.size > 0:
+            # Check if bounding_box_content is not empty
+            if bounding_box_content.size > 0:
                 # Calculate the dimensions of the bounding box content
                 content_height, content_width, _ = bounding_box_content.shape
 
