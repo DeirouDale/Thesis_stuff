@@ -9,7 +9,7 @@ mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
 # Load your video file (replace 'your_video.mp4' with the path to your video file)
-video_path = 'Video.mp4'
+video_path = "Videos\Video2.mp4"
 cap = cv2.VideoCapture(video_path)
 
 # Set the initial window size
@@ -32,7 +32,7 @@ cv2.namedWindow(bounding_box_content_window_name, cv2.WINDOW_NORMAL)
 drawing_bbox = False
 playing = True
 
-target_directory = "data\Phase1"
+target_directory = "data\Phase1" 
 while cap.isOpened():
 
 
@@ -131,23 +131,23 @@ while cap.isOpened():
         cv2.imshow("Leg Tracking with Bounding Box", frame)
 
     # Check for user keyboard input for video navigation
-    key = cv2.waitKey(1) & 0xFF
+    key = cv2.waitKey(70) & 0xFF
     if key == ord('q'):
         break
     elif key == ord(' '):  # Press 'Space' to toggle play/pause
         playing = not playing
     elif key == ord('d'):
         frame_number = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
-        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number + 10)  # Press 'd' to go forward by 10 frames
+        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number + 5)  # Press 'd' to go forward by 10 frames
     elif key == ord('a'):
         frame_number = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
-        cap.set(cv2.CAP_PROP_POS_FRAMES, max(frame_number - 10, 0))  # Press 'a' to go back by 10 frames
+        cap.set(cv2.CAP_PROP_POS_FRAMES, max(frame_number - 5, 0))  # Press 'a' to go back by 10 frames
     elif key == ord('s'):  # Press 's' to save the current frame as a JPG image
         frame_filename = os.path.join(target_directory, f'Phase1_{frame_number}.jpg')
     
         # Check if the file already exists in the target directory
         if os.path.isfile(frame_filename):
-            # If the file already exists, find a new name with (1), (2), etc.
+            # If the file already exists, find a new name with (1), (2), etc.a
             index = 1
             while os.path.isfile(frame_filename):
                 frame_filename = os.path.join(target_directory, f'Phase1_{frame_number} ({index}).jpg')
@@ -155,7 +155,5 @@ while cap.isOpened():
 
         cv2.imwrite(frame_filename, imgWhite)  # Save the frame as a JPG image
         print(f"Saved frame as {frame_filename}")
-
 cap.release()
 cv2.destroyAllWindows()
- 
