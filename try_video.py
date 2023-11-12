@@ -18,7 +18,8 @@ cv2.namedWindow("Leg Tracking with Bounding Box", cv2.WINDOW_NORMAL)
 # Initialize MediaPipe Pose with minimum confidence thresholds
 pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
-offset = 30
+x_offset = 70
+y_offset = 90
 imgSize = 500
 
 # Initialize variables for calculating FPS
@@ -71,10 +72,10 @@ while cap.isOpened():
             y_min = int(min(left_hip.y, right_hip.y) * frame.shape[0])
             y_max = int(max(left_ankle.y, right_ankle.y, left_foot_tip.y, right_foot_tip.y) * frame.shape[0])
 
-            x_min -= offset
-            y_min -= offset
-            x_max += offset
-            y_max += offset
+            x_min -= x_offset
+            y_min -= y_offset
+            x_max += x_offset
+            y_max += y_offset
 
             # Draw landmarks and bounding box directly on the frame
             mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
