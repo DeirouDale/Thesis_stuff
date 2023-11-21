@@ -4,12 +4,16 @@ import numpy as np
 import math
 import time
 import os
+import tensorflow as tf
+from tensorflow.keras.models import load_model
 
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
+new_model = load_model('model/CNN/GaitPhaseClassifier.h5')
+
 # Load your video file (replace 'your_video.mp4' with the path to your video file)
-video_path = "Videos\Video2.mp4"
+video_path = "Videos\Video1.mp4"
 cap = cv2.VideoCapture(video_path)
 
 # Set the initial window size
@@ -18,8 +22,8 @@ cv2.namedWindow("Leg Tracking with Bounding Box", cv2.WINDOW_NORMAL)
 # Initialize MediaPipe Pose with minimum confidence thresholds
 pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
-x_offset = 70
-y_offset = 90
+x_offset = 30
+y_offset = 30
 imgSize = 500
 
 # Initialize variables for calculating FPS
@@ -32,6 +36,12 @@ cv2.namedWindow(bounding_box_content_window_name, cv2.WINDOW_NORMAL)
 # Flag to indicate if a bounding box is being drawn
 drawing_bbox = False
 playing = True
+
+font = cv2.FONT_HERSHEY_SIMPLEX
+prediction = ""
+font_scale = 1
+color = (255, 255, 255)  # Text color in BGR format
+thickness = 2
 
 target_directory = "data\Phase1" 
 while cap.isOpened():
@@ -107,6 +117,7 @@ while cap.isOpened():
 
                     wGap = math.ceil((500 - wCal) / 2)  # calculate gap
                     imgWhite[:, wGap:wCal + wGap] = imgResize  # add image to white image
+                    
 
                 else:  # if width is greater than height
                     k = imgSize / content_width  # get ratio of image size to width
@@ -117,15 +128,42 @@ while cap.isOpened():
                     hGap = math.ceil((500 - hCal) / 2)  # calculate gap
                     imgWhite[hGap:hCal + hGap, :] = imgResize  # add image to white image
 
+                
                 # Resize the bounding_box_content window based on the content dimensions
+
                 cv2.namedWindow(bounding_box_content_window_name, cv2.WINDOW_NORMAL)
                 cv2.resizeWindow(bounding_box_content_window_name, content_width, content_height)
 
                 # Show the bounding box content in the resized window
-                cv2.imshow(bounding_box_content_window_name, bounding_box_content)
-                cv2.imshow('ImageWhite', imgWhite)  # show white image
+                #cv2.imshow(bounding_box_content_window_name, bounding_box_content)
+                #cv2.imshow('ImageWhite', imgWhite)  # show white image
 
         # Show the FPS on the main window's upper right corner
+        resize = cv2.resize(imgWhite, (256, 256))
+        normalized_img = resize / 255.0
+        yhat_single = new_model.predict(np.expand_dims(normalized_img, axis=0))
+        predicted_class = int(np.argmax(yhat_single, axis=1))
+        if predicted_class == 0:
+            prediction = "Phase 1"
+        elif predicted_class == 1:
+            prediction = "Phase 2"
+        elif predicted_class == 2:
+            prediction = "Phase 3"
+        elif predicted_class == 3:
+            prediction = "Phase 4"
+        elif predicted_class == 4:
+            prediction = "Phase 5"
+        elif predicted_class == 5:
+            prediction = "Phase 6"
+        elif predicted_class == 6:
+            prediction = "Phase 7"
+        elif predicted_class == 7:
+            prediction = "Phase 8"
+        text_size = cv2.getTextSize(prediction, font, font_scale, thickness)[0]
+        text_width, text_height = text_size[0], text_size[1]
+        text_x = x_min
+        text_y = y_max + text_height + 10 
+        cv2.putText(frame, prediction, (text_x, text_y), font, font_scale, color, thickness)
         cv2.putText(frame, f'FPS: {int(fps)}', (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
         # Show the processed frame with bounding box and FPS
