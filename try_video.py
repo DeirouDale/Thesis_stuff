@@ -7,6 +7,20 @@ import os
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
+#calculate angle between 3 points
+def calculate_angle(a,b,c):
+    a = np.array(a) # First
+    b = np.array(b) # Mid
+    c = np.array(c) # End
+    
+    radians = np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], a[0]-b[0])
+    angle = np.abs(radians*180.0/np.pi)
+    
+    if angle >180.0:
+        angle = 360-angle
+        
+    return angle
+
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
@@ -30,8 +44,8 @@ imgSize = 500
 prev_time = 0
 frame_number = 0  # Initialize frame number
 
-bounding_box_content_window_name = "Bounding Box Content"
-cv2.namedWindow(bounding_box_content_window_name, cv2.WINDOW_NORMAL)
+#bounding_box_content_window_name = "Bounding Box Content"
+#cv2.namedWindow(bounding_box_content_window_name, cv2.WINDOW_NORMAL)
 
 # Flag to indicate if a bounding box is being drawn
 drawing_bbox = False
@@ -75,6 +89,38 @@ while cap.isOpened():
         right_ankle = landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value]
         right_foot_tip = landmarks[mp_pose.PoseLandmark.RIGHT_FOOT_INDEX.value]
 
+        #get coordinates for right hip, knee, ankle, shoulder
+        rshoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
+        rhip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
+        rknee = [landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y]
+        rankle = [landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].y]
+        rfoot_tip = [landmarks[mp_pose.PoseLandmark.RIGHT_FOOT_INDEX.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_FOOT_INDEX.value].y]
+        #get coordinates for left hip, knee, ankle, shoulder
+        lshoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
+        lhip = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x,landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
+        lknee = [landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].x,landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y]
+        lankle = [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x,landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y]
+        lfoor_tip = [landmarks[mp_pose.PoseLandmark.LEFT_FOOT_INDEX.value].x,landmarks[mp_pose.PoseLandmark.LEFT_FOOT_INDEX.value].y]
+        #calculate angle for right side
+        rangle_knee = calculate_angle(rhip,rknee,rankle)
+        rangle_hip = calculate_angle(rshoulder, rhip, rknee)
+        rangle_ankle = calculate_angle(rknee, rankle, rfoot_tip)
+        rhip_angle = 180-rangle_hip
+        rknee_angle = 180-rangle_knee
+        rankle_angle = 180-rangle_ankle
+        rhip_angle = round(rhip_angle,2)
+        rknee_angle = round(rknee_angle,2)
+        rankle_angle = round(rankle_angle,2)
+        #calculate angle for left side
+        langle_knee = calculate_angle(lhip,lknee,lankle)
+        langle_hip = calculate_angle(lshoulder, lhip, lknee)
+        langle_ankle = calculate_angle(lknee, lankle, lfoor_tip)
+        lhip_angle = 180-langle_hip
+        lknee_angle = 180-langle_knee
+        lankle_angle = 180-langle_ankle
+        lhip_angle = round(lhip_angle,2)
+        lknee_angle = round(lknee_angle,2)
+        lankle_angle = round(lankle_angle,2)
         if left_hip and left_ankle and left_foot_tip and right_hip and right_ankle and right_foot_tip:
             # Calculate bounding box coordinates to cover the ankles and foot tips
             x_min = int(min(left_ankle.x, right_ankle.x, left_foot_tip.x, right_foot_tip.x) * frame.shape[1])
@@ -131,8 +177,8 @@ while cap.isOpened():
                 
                 # Resize the bounding_box_content window based on the content dimensions
 
-                cv2.namedWindow(bounding_box_content_window_name, cv2.WINDOW_NORMAL)
-                cv2.resizeWindow(bounding_box_content_window_name, content_width, content_height)
+                #cv2.namedWindow(bounding_box_content_window_name, cv2.WINDOW_NORMAL)
+                #cv2.resizeWindow(bounding_box_content_window_name, content_width, content_height)
 
                 # Show the bounding box content in the resized window
                 #cv2.imshow(bounding_box_content_window_name, bounding_box_content)
@@ -165,7 +211,12 @@ while cap.isOpened():
         text_y = y_max + text_height + 10 
         cv2.putText(frame, prediction, (text_x, text_y), font, font_scale, color, thickness)
         cv2.putText(frame, f'FPS: {int(fps)}', (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
-
+        cv2.putText(frame, f'Angle Right Hip: {rhip_angle}', (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+        cv2.putText(frame, f'Angle Right Knee: {rknee_angle}', (20, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+        cv2.putText(frame, f'Angle Right Ankle: {rankle_angle}', (20, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+        cv2.putText(frame, f'Angle Left Hip: {lhip_angle}', (20, 250), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+        cv2.putText(frame, f'Angle Left Knee: {lknee_angle}', (20, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)  
+        cv2.putText(frame, f'Angle Left Ankle: {lankle_angle}', (20, 350), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
         # Show the processed frame with bounding box and FPS
         cv2.imshow("Leg Tracking with Bounding Box", frame)
 
